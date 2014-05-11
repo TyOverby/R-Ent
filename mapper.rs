@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 extern crate collections;
 
 use entity::Entity;
@@ -20,7 +21,7 @@ impl <C: 'static> Mapper<C> {
     /// Maps a component to an entity.
     /// Returns true if a component was already
     /// mapped to by this Entity.
-    pub fn put(&mut self, e: Entity, c: C)-> bool {
+    pub fn set(&mut self, e: Entity, c: C)-> bool {
         !self.map.insert(e, c)
     }
     /// Retrieves an entity from the mapping.
@@ -45,7 +46,7 @@ struct Comp {
 fn test_insert() {
     let mut mapper = Mapper::new();
 
-    assert!(!mapper.put(Entity{id: 0}, Comp{x: 0, y:1}));
+    assert!(!mapper.set(Entity{id: 0}, Comp{x: 0, y:1}));
 
     {
         let g1 = mapper.get(Entity{id: 0});
@@ -60,12 +61,12 @@ fn test_insert() {
 fn test_override() {
     let mut mapper = Mapper::new();
     {
-        assert!(!mapper.put(Entity{id: 0}, Comp{x: 0, y:1}));
+        assert!(!mapper.set(Entity{id: 0}, Comp{x: 0, y:1}));
         let g1 = mapper.get(Entity{id: 0});
         assert!(g1.is_some());
         assert!(*g1.unwrap() == Comp{x: 0, y: 1});
     } {
-        assert!(mapper.put(Entity{id: 0}, Comp{x: 1, y:2}));
+        assert!(mapper.set(Entity{id: 0}, Comp{x: 1, y:2}));
         let g2 = mapper.get(Entity{id: 0});
         assert!(g2.is_some());
         assert!(*g2.unwrap() == Comp{x: 1, y: 2});
@@ -76,7 +77,7 @@ fn test_override() {
 fn test_remove() {
     let mut mapper = Mapper::new();
     {
-        assert!(!mapper.put(Entity{id: 0}, Comp{x: 0, y:1}));
+        assert!(!mapper.set(Entity{id: 0}, Comp{x: 0, y:1}));
         let g1 = mapper.get(Entity{id: 0});
         assert!(g1.is_some());
         assert!(*g1.unwrap() == Comp{x: 0, y: 1});

@@ -1,7 +1,8 @@
+#![allow(dead_code)]
 extern crate collections;
 extern crate core;
 
-pub use entity::Entity;
+use entity::Entity;
 use mapper::Mapper;
 use collections::hashmap::HashMap;
 use core::intrinsics::TypeId;
@@ -16,7 +17,7 @@ pub struct Router {
 }
 
 impl Router {
-    fn new()-> Router {
+    pub fn new()-> Router {
         return Router {map: HashMap::new()}
     }
 
@@ -33,13 +34,13 @@ impl Router {
         self.map.insert(TypeId::of::<C>(), m);
     }
 
-    pub fn put<'a, C: 'static>(&'a mut self, e: Entity, c: C) -> bool {
+    pub fn set<'a, C: 'static>(&'a mut self, e: Entity, c: C) -> bool {
         if !self.map.contains_key(&TypeId::of::<C>()) {
             self.init_for::<C>();
         }
         match self.get_mapper::<C>() {
             Some(mapper) => {
-                mapper.put(e, c);
+                mapper.set(e, c);
                 true
             },
             None => {
@@ -54,6 +55,13 @@ impl Router {
             Some(mapper) => mapper.get(e),
             None => None
         }
+    }
+
+    pub fn del<C: 'static>(&mut self, e: Entity) {
+        match self.get_mapper::<C>() {
+            Some(mapper) => { mapper.del(e); }
+            None => { }
+        };
     }
 }
 
@@ -89,13 +97,13 @@ mod router_tests{
     fn test_insert() {
         let mut router = Router::new();
         {
-            router.put(Entity::new(0), Vel::new(0,5));
+            router.set(Entity::new(0), Vel::new(0,5));
             let v0 = router.get::<Vel>(Entity::new(0));
             assert!(v0.is_some());
             assert!(*v0.unwrap() == Vel::new(0,5));
         }
         {
-            router.put(Entity::new(0), Hidden::new(true));
+            router.set(Entity::new(0), Hidden::new(true));
             let v0 = router.get::<Hidden>(Entity::new(0));
             assert!(v0.is_some());
             assert!(*v0.unwrap() == Hidden::new(true));
@@ -106,16 +114,32 @@ mod router_tests{
     fn test_replace() {
         let mut router = Router::new();
         {
-            router.put(Entity::new(0), Vel::new(0,5));
+            router.set(Entity::new(0), Vel::new(0,5));
             let v0 = router.get::<Vel>(Entity::new(0));
             assert!(v0.is_some());
             assert!(*v0.unwrap() == Vel::new(0,5));
         }
         {
-            router.put(Entity::new(0), Vel::new(1,1));
+            router.set(Entity::new(0), Vel::new(1,1));
             let v0 = router.get::<Vel>(Entity::new(0));
             assert!(v0.is_some());
             assert!(*v0.unwrap() == Vel::new(1,1));
+        }
+    }
+
+    #[test]
+    fn test_remove() {
+        let mut router = Router::new();
+        {
+            router.set(Entity::new(0), Vel::new(0,5));
+            let v0 = router.get::<Vel>(Entity::new(0));
+            assert!(v0.is_some());
+            assert!(*v0.unwrap() == Vel::new(0,5));
+        }
+        {
+            router.del::<Vel>(Entity::new(0));
+            let v0 = router.get::<Vel>(Entity::new(0));
+            assert!(v0.is_none());
         }
     }
 }
